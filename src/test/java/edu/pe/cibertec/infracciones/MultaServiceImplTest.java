@@ -7,8 +7,11 @@ import edu.pe.cibertec.infracciones.model.Vehiculo;
 import edu.pe.cibertec.infracciones.repository.InfractorRepository;
 import edu.pe.cibertec.infracciones.repository.MultaRepository;
 import edu.pe.cibertec.infracciones.service.impl.MultaServiceImpl;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -71,5 +74,40 @@ public class MultaServiceImplTest {
         // Assert
         assertEquals(nuevoInfractorId, multa.getInfractor().getId());
         verify(multaRepository, times(1)).save(multa);
+    }
+
+    @Captor
+    private ArgumentCaptor<Multa> multaCaptor;
+
+    @Test
+    void transferirMulta_LanzaExcepcion_Pregunta4() {
+
+        Long multaId = 1L;
+        Long nuevoInfractorId = 2L;
+
+        // Multa PENDIENTE (cumple la regla 1)
+        Multa multa = new Multa();
+        multa.setId(multaId);
+        multa.setEstado(EstadoMulta.PENDIENTE);
+
+        // Infractor B está BLOQUEADO (esto debe hacer fallar)
+        Infractor infractorB = new Infractor();
+        infractorB.setId(nuevoInfractorId);
+        infractorB.setBloqueado(true);
+
+        when(multaRepository.findById(multaId)).thenReturn(Optional.of(multa));
+        when(infractorRepository.findById(nuevoInfractorId)).thenReturn(Optional.of(infractorB));
+
+        // Act & Assert
+
+        Exception excepcion = Assertions.assertThrows(RuntimeException.class, () -> {
+            multaService.transferirMulta(multaId, nuevoInfractorId);
+        });
+
+        assertEquals("El nuevo infractor está bloqueado", excepcion.getMessage());
+
+        verify(multaRepository, never()).save(any(Multa.class));
+
+        verify(multaRepository, times(0)).save(multaCaptor.capture());
     }
 }

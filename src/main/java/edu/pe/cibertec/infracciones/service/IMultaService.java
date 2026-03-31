@@ -10,4 +10,6 @@ public interface IMultaService {
     List<MultaResponseDTO> obtenerMultasPorInfractor(Long infractorId);
     List<MultaResponseDTO> obtenerMultasPorVehiculo(Long vehiculoId);
 
+    //MI METODO PARA LA PREGUNTA 3
+    void transferirMulta (Long multaId, Long nuevoInfractorId);
 }

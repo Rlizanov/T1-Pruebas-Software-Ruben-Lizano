@@ -95,6 +95,7 @@ public class MultaServiceImpl implements IMultaService {
                 .toList();
     }
 
+
     private MultaResponseDTO mapToResponse(Multa multa) {
         MultaResponseDTO dto = new MultaResponseDTO();
         dto.setId(multa.getId());
@@ -110,4 +111,35 @@ public class MultaServiceImpl implements IMultaService {
                 .toList());
         return dto;
     }
+
+    @Override
+    public void transferirMulta(Long multaId, Long nuevoInfractorId) {
+
+        Multa multa = multaRepository.findById(multaId)
+                .orElseThrow(() -> new RuntimeException("Multa no encontrada"));
+        Infractor nuevoInfractor = infractorRepository.findById(nuevoInfractorId)
+                .orElseThrow(() -> new RuntimeException("Infractor no encontrado"));
+
+
+        if (multa.getEstado() != EstadoMulta.PENDIENTE) {
+            throw new RuntimeException("Solo se pueden transferir multas en estado PENDIENTE");
+        }
+
+        // 3. Verificamos la Regla 2: El nuevo infractor NO debe estar bloqueado
+        if (nuevoInfractor.isBloqueado()) {
+            throw new RuntimeException("El nuevo infractor está bloqueado");
+        }
+
+        Long idVehiculoMulta = multa.getVehiculo().getId();
+        boolean tieneElVehiculo = nuevoInfractor.getVehiculos().stream()
+                .anyMatch(v -> v.getId().equals(idVehiculoMulta));
+
+        if (!tieneElVehiculo) {
+            throw new RuntimeException("El nuevo infractor no tiene asignado el vehículo de la multa");
+        }
+
+        multa.setInfractor(nuevoInfractor);
+        multaRepository.save(multa);
+    }
+
 }

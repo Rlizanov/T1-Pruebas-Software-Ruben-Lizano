@@ -94,4 +94,5 @@ public class InfractorServiceImplTest {
         assertTrue(infractor.getVehiculos().isEmpty()); // Verifica que se removió
         verify(infractorRepository, times(1)).save(infractor); // Verifica que se guardó
     }
+
 }

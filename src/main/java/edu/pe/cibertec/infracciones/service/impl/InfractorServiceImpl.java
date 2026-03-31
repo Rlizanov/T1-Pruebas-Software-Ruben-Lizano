@@ -89,4 +89,27 @@ public class InfractorServiceImpl implements IInfractorService {
 
         return deudaTotal;
     }
+
+    @Override
+    public void desAsignarVehiculo(Long InfractorId, Long VehiculoId) {
+        // 1. Buscamos al infractor
+        Infractor infractor = infractorRepository.findById(InfractorId)
+                .orElseThrow(() -> new InfractorNotFoundException(InfractorId));
+
+        // 2. Verificamos la regla de negocio: ¿tiene multas pendientes en ese vehículo?
+        boolean tieneMultasPendientes = multaRepository.existsByInfractor_IdAndVehiculo_IdAndEstado(
+                InfractorId, VehiculoId, EstadoMulta.PENDIENTE);
+
+        // 3. Aplicamos la lógica
+        if (!tieneMultasPendientes) {
+            // Removemos comparando el ID del vehículo
+            infractor.getVehiculos().removeIf(v -> v.getId().equals(VehiculoId));
+
+            // Guardamos los cambios en el repositorio
+            infractorRepository.save(infractor);
+        } else {
+            // Si tiene multas pendientes, lanzamos un error como regla de negocio
+            throw new RuntimeException("El vehículo tiene multas pendientes y no puede ser desasignado");
+        }
+    }
 }

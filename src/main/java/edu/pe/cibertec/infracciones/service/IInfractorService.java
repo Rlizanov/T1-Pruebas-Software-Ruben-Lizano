@@ -10,5 +10,7 @@ public interface IInfractorService {
     List<InfractorResponseDTO> obtenerTodos();
     void asignarVehiculo(Long infractorId, Long vehiculoId);
 
+    // METODOS PARA EL EXAMEN
     Double calcularDeuda(Long idInfractor);
+    void desAsignarVehiculo(Long InfractorId, Long VehiculoId);
 }
